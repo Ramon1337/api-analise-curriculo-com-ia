@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+requests
+reportlab
+pydantic
+pydantic-settings
+python-dotenv
+PyPDF2
