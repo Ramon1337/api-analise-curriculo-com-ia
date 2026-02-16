@@ -5,10 +5,12 @@ Carrega variáveis de ambiente via python-dotenv e expõe via Pydantic Settings.
 
 from __future__ import annotations
 
+import json
 import logging
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # ---------------------------------------------------------------------------
@@ -47,6 +49,19 @@ class Settings(BaseSettings):
 
     # ---- CORS --------------------------------------------------------------
     CORS_ORIGINS: list[str] = ["*"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
+        """Aceita JSON string ou lista. Ex: '["http://localhost:3000"]' ou '*'."""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            return [item.strip() for item in v.split(",")]
+        return ["*"]
 
     # ---- Futuro JWT --------------------------------------------------------
     SECRET_KEY: str = "change-me-in-production"
