@@ -1,0 +1,40 @@
+# Ambiente virtual
+venv/
+
+# Variáveis de ambiente
+.env
+.env.*
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# PDFs temporários gerados pela API
+*.pdf
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Distribuição / build
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Logs
+*.log
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
