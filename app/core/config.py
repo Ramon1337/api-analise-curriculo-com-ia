@@ -10,7 +10,6 @@ import logging
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # ---------------------------------------------------------------------------
@@ -48,20 +47,15 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE_MB: int = 5  # limite em megabytes
 
     # ---- CORS --------------------------------------------------------------
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: str = "*"
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Aceita JSON string ou lista. Ex: '["http://localhost:3000"]' ou '*'."""
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                return json.loads(v)
-            return [item.strip() for item in v.split(",")]
-        return ["*"]
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Converte a string CORS_ORIGINS em lista."""
+        v = self.CORS_ORIGINS.strip()
+        if v.startswith("["):
+            return json.loads(v)
+        return [item.strip() for item in v.split(",")]
 
     # ---- Futuro JWT --------------------------------------------------------
     SECRET_KEY: str = "change-me-in-production"
