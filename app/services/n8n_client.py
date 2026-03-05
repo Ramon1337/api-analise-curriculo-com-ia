@@ -4,6 +4,7 @@ Cliente HTTP para comunicação com o webhook do n8n.
 
 from __future__ import annotations
 
+import json
 import logging
 
 import requests
@@ -80,10 +81,16 @@ def send_resume(text: str, adjust: bool) -> N8NResponse:
 
     logger.debug("Dados recebidos do n8n (normalizado): %s", str(data)[:500])
 
+    # Função auxiliar: se o valor for dict/list, converte para string JSON.
+    def _to_str(value: object) -> str:
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, ensure_ascii=False, indent=2)
+        return str(value) if value else ""
+
     # Se a resposta vier com campo "output" (texto único do n8n),
     # mapeia para os campos esperados pelo schema.
     if "output" in data and "analysis" not in data:
-        output_text: str = data["output"]
+        output_text: str = _to_str(data["output"])
         return N8NResponse(
             analysis=output_text,
             suggestions=output_text,
@@ -93,10 +100,10 @@ def send_resume(text: str, adjust: bool) -> N8NResponse:
 
     # Formato: {"analysis": "...", "suggestions": "...", "score": N}
     return N8NResponse(
-        analysis=data.get("analysis", ""),
-        suggestions=data.get("suggestions", ""),
+        analysis=_to_str(data.get("analysis", "")),
+        suggestions=_to_str(data.get("suggestions", "")),
         score=data.get("score"),
-        rewritten_resume=data.get("rewritten_resume", "") or (
-            data.get("analysis", "") if adjust else ""
+        rewritten_resume=_to_str(data.get("rewritten_resume", "")) or (
+            _to_str(data.get("analysis", "")) if adjust else ""
         ),
     )
