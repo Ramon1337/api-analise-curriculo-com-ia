@@ -26,7 +26,11 @@ def create_app() -> FastAPI:
         title="Resume AI Backend",
         description=(
             "API para análise e ajuste de currículos com IA, "
-            "integrada ao n8n como orquestrador."
+            "integrada ao n8n como orquestrador.\n\n"
+            "### Formatos de arquivo aceitos\n"
+            "- **PDF** (`.pdf`)\n"
+            "- **Word / DOCX** (`.docx`)\n"
+            "- **Texto puro** (`.txt`)\n"
         ),
         version="1.0.0",
         docs_url="/docs",

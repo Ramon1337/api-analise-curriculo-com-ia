@@ -29,10 +29,17 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
     response_model=AnalysisResponse,
     summary="Analisa ou ajusta um currículo",
     description=(
-        "Recebe um arquivo PDF ou texto (.txt), envia para o n8n (orquestrador de IA) "
+        "Recebe um arquivo PDF, DOCX ou texto (.txt), envia para o n8n (orquestrador de IA) "
         "e devolve:\n\n"
-        "- **adjust=False** → JSON com `analysis`, `suggestions` e `score` (0-10)\n"
-        "- **adjust=True** → PDF com o currículo reescrito\n\n"
+        "### Formatos aceitos\n"
+        "| Formato | MIME type | Extensão |\n"
+        "|---------|-----------|----------|\n"
+        "| PDF | `application/pdf` | `.pdf` |\n"
+        "| Word | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | `.docx` |\n"
+        "| Texto | `text/plain` | `.txt` |\n\n"
+        "### Modos de operação\n"
+        "- **adjust=false** → JSON com `analysis`, `suggestions` e `score` (0-10)\n"
+        "- **adjust=true** → PDF com o currículo reescrito\n\n"
         "O campo `score` contém a nota geral atribuída pela IA ao currículo."
     ),
     responses={
@@ -58,7 +65,7 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
     },
 )
 async def analyze_resume(
-    file: UploadFile = File(..., description="Currículo em PDF ou texto (.txt)"),
+    file: UploadFile = File(..., description="Currículo em PDF, DOCX ou texto (.txt)"),
     adjust: bool = Form(False, description="Se True, retorna PDF reescrito"),
 ):
     """Endpoint principal de análise / ajuste de currículo."""
