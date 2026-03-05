@@ -25,7 +25,7 @@ class N8NPayload(BaseModel):
 class N8NResponse(BaseModel):
     """Resposta esperada do webhook do n8n."""
 
-    score: int | None = Field(None, description="Nota atribuída ao currículo (0-10)")
+    score: float | None = Field(None, description="Nota atribuída ao currículo (0-10)")
     justificativa_score: str = Field("", description="Justificativa da nota")
     nivel_classificado: str = Field("", description="Nível classificado (ex: Pleno, Júnior, Sênior)")
     pontos_fortes: list[str] = Field(default_factory=list, description="Lista de pontos fortes")
@@ -41,12 +41,12 @@ class N8NResponse(BaseModel):
 class AnalysisResponse(BaseModel):
     """Resposta devolvida ao cliente quando adjust=False."""
 
-    score: int | None = Field(
+    score: float | None = Field(
         None,
         description="Nota geral do currículo de 0 a 10",
         ge=0,
         le=10,
-        json_schema_extra={"example": 8},
+        json_schema_extra={"example": 7.5},
     )
     justificativa_score: str = Field(
         "",
