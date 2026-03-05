@@ -81,29 +81,34 @@ def send_resume(text: str, adjust: bool) -> N8NResponse:
 
     logger.debug("Dados recebidos do n8n (normalizado): %s", str(data)[:500])
 
-    # Função auxiliar: se o valor for dict/list, converte para string JSON.
-    def _to_str(value: object) -> str:
-        if isinstance(value, (dict, list)):
-            return json.dumps(value, ensure_ascii=False, indent=2)
-        return str(value) if value else ""
+    # Função auxiliar: garante que o valor é uma lista de strings.
+    def _to_list(value: object) -> list[str]:
+        if isinstance(value, list):
+            return [str(item) for item in value]
+        if isinstance(value, str) and value:
+            return [value]
+        return []
 
     # Se a resposta vier com campo "output" (texto único do n8n),
     # mapeia para os campos esperados pelo schema.
-    if "output" in data and "analysis" not in data:
-        output_text: str = _to_str(data["output"])
+    if "output" in data and "score" not in data:
+        output_text = str(data["output"]) if data["output"] else ""
         return N8NResponse(
-            analysis=output_text,
-            suggestions=output_text,
-            score=data.get("score"),
+            score=None,
+            avaliacao_geral=output_text,
             rewritten_resume=output_text if adjust else "",
         )
 
-    # Formato: {"analysis": "...", "suggestions": "...", "score": N}
+    # Formato estruturado da IA
     return N8NResponse(
-        analysis=_to_str(data.get("analysis", "")),
-        suggestions=_to_str(data.get("suggestions", "")),
         score=data.get("score"),
-        rewritten_resume=_to_str(data.get("rewritten_resume", "")) or (
-            _to_str(data.get("analysis", "")) if adjust else ""
+        justificativa_score=str(data.get("justificativa_score", "")),
+        nivel_classificado=str(data.get("nivel_classificado", "")),
+        pontos_fortes=_to_list(data.get("pontos_fortes")),
+        pontos_fracos=_to_list(data.get("pontos_fracos")),
+        sugestoes_praticas=_to_list(data.get("sugestoes_praticas")),
+        avaliacao_geral=str(data.get("avaliacao_geral", "")),
+        rewritten_resume=str(data.get("rewritten_resume", "")) or (
+            str(data.get("avaliacao_geral", "")) if adjust else ""
         ),
     )

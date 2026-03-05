@@ -38,9 +38,10 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
         "| Word | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` | `.docx` |\n"
         "| Texto | `text/plain` | `.txt` |\n\n"
         "### Modos de operação\n"
-        "- **adjust=false** → JSON com `analysis`, `suggestions` e `score` (0-10)\n"
+        "- **adjust=false** → JSON com `score`, `justificativa_score`, `nivel_classificado`, "
+        "`pontos_fortes`, `pontos_fracos`, `sugestoes_praticas` e `avaliacao_geral`\n"
         "- **adjust=true** → PDF com o currículo reescrito\n\n"
-        "O campo `score` contém a nota geral atribuída pela IA ao currículo."
+        "O campo `score` contém a nota geral (0-10) atribuída pela IA ao currículo."
     ),
     responses={
         200: {
@@ -49,9 +50,13 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
                 "application/json": {
                     "schema": AnalysisResponse.model_json_schema(),
                     "example": {
-                        "analysis": "1) Pontos fortes\n- Experiência com IA...\n2) Pontos fracos...\n3) Sugestões...",
-                        "suggestions": "Corrigir formatação, incluir métricas...",
-                        "score": 7,
+                        "score": 8,
+                        "justificativa_score": "Currículo bem estruturado com experiência relevante.",
+                        "nivel_classificado": "Pleno",
+                        "pontos_fortes": ["Experiência com IA", "Boa formação acadêmica"],
+                        "pontos_fracos": ["Falta de métricas", "Sem portfólio online"],
+                        "sugestoes_praticas": ["Incluir métricas de impacto", "Adicionar link do GitHub"],
+                        "avaliacao_geral": "Currículo com bom potencial, precisa de ajustes pontuais.",
                     },
                 },
                 "application/pdf": {
@@ -153,9 +158,13 @@ async def analyze_resume(
     # Modo análise → JSON
     logger.info("Retornando análise em JSON")
     return AnalysisResponse(
-        analysis=n8n_response.analysis,
-        suggestions=n8n_response.suggestions,
         score=n8n_response.score,
+        justificativa_score=n8n_response.justificativa_score,
+        nivel_classificado=n8n_response.nivel_classificado,
+        pontos_fortes=n8n_response.pontos_fortes,
+        pontos_fracos=n8n_response.pontos_fracos,
+        sugestoes_praticas=n8n_response.sugestoes_praticas,
+        avaliacao_geral=n8n_response.avaliacao_geral,
     )
 
 
