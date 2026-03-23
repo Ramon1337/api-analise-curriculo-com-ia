@@ -4,8 +4,8 @@ Cliente HTTP para comunicação com o webhook do n8n.
 
 from __future__ import annotations
 
-import json
 import logging
+import re
 
 import requests
 from requests.exceptions import ConnectionError, ReadTimeout
@@ -14,6 +14,36 @@ from app.core.config import get_settings
 from app.schemas.resume_schema import N8NPayload, N8NResponse
 
 logger = logging.getLogger("resume-ai.n8n_client")
+
+
+def _extract_rewritten_resume(text: str) -> str:
+    """Extrai apenas o currículo reescrito quando o LLM devolve etapas.
+
+    Alguns fluxos do n8n retornam um texto único com:
+      - ETAPA 1 (análise)
+      - ETAPA 2 (currículo reescrito)
+
+    Para geração de PDF, precisamos apenas da parte da ETAPA 2.
+    Se o marcador não existir, devolve o texto original.
+    """
+    if not text:
+        return ""
+
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    stage2_patterns = [
+        r"(?is)\betapa\s*2\s*[-—:]*\s*curr[íi]culo\s*reescrito\b",
+        r"(?is)\bcurr[íi]culo\s*reescrito\b",
+    ]
+
+    for pattern in stage2_patterns:
+        match = re.search(pattern, normalized)
+        if match:
+            extracted = normalized[match.end() :].strip()
+            if extracted:
+                return extracted
+
+    return normalized.strip()
 
 
 def send_resume(text: str, adjust: bool) -> N8NResponse:
@@ -96,10 +126,14 @@ def send_resume(text: str, adjust: bool) -> N8NResponse:
         return N8NResponse(
             score=None,
             avaliacao_geral=output_text,
-            rewritten_resume=output_text if adjust else "",
+            rewritten_resume=_extract_rewritten_resume(output_text) if adjust else "",
         )
 
     # Formato estruturado da IA
+    rewritten_resume_text = str(data.get("rewritten_resume", ""))
+    if not rewritten_resume_text and adjust:
+        rewritten_resume_text = str(data.get("avaliacao_geral", ""))
+
     return N8NResponse(
         score=data.get("score"),
         justificativa_score=str(data.get("justificativa_score", "")),
@@ -108,7 +142,9 @@ def send_resume(text: str, adjust: bool) -> N8NResponse:
         pontos_fracos=_to_list(data.get("pontos_fracos")),
         sugestoes_praticas=_to_list(data.get("sugestoes_praticas")),
         avaliacao_geral=str(data.get("avaliacao_geral", "")),
-        rewritten_resume=str(data.get("rewritten_resume", "")) or (
-            str(data.get("avaliacao_geral", "")) if adjust else ""
+        rewritten_resume=(
+            _extract_rewritten_resume(rewritten_resume_text)
+            if adjust
+            else str(data.get("rewritten_resume", ""))
         ),
     )
